@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>学习打卡</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .stars-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stars-number {
+            font-size: 64px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .stars-label {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .stars-visual {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .star-icon {
+            font-size: 28px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .progress-bar {
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+        
+        .progress-text {
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .task-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .task-buttons {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .task-btn {
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .task-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .btn-raz-new {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-raz-old {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-writing {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-custom {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        
+        .custom-input-area {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .custom-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        .custom-submit {
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .redeem-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .redeem-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .redeem-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.3);
+        }
+        
+        .redeem-btn:disabled {
+            background: #ccc;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        
+        .redeem-btn:not(:disabled):active {
+            transform: scale(0.95);
+        }
+        
+        .modal-overlay {
+            display: none !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-overlay.show {
+            display: flex !important;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .modal-subtitle {
+            font-size: 14px;
+            color: #999;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 15px;
+        }
+        
+        .modal-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .modal-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .modal-btn-cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .history-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-task {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .history-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        
+        .redeem-history {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .redeem-record {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #fff3cd;
+            border-radius: 12px;
+            border-left: 4px solid #ffc107;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 登录界面 -->
+        <div id="loginScreen" style="display: none;">
+            <div class="header">
+                <h1>🌟 学习打卡</h1>
+                <p>请输入手机号开始使用</p>
+            </div>
+            <div class="stars-card">
+                <input type="tel" class="custom-input" id="phoneInput" placeholder="请输入手机号" maxlength="11" style="margin-bottom: 15px;">
+                <button class="custom-submit" onclick="loginWithPhone()">开始使用</button>
+                <div style="margin-top: 15px; font-size: 12px; color: #999;">
+                    提示：同一手机号的数据会同步保存
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主界面 -->
+        <div id="mainScreen">
+            <div class="header">
+                <h1>🌟 学习打卡</h1>
+                <p>每天进步一点点 <span id="userPhone" style="font-size: 12px; color: #667eea;"></span></p>
+            </div>
+        
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-value" id="currentStars">0</div>
+                <div class="stat-label">⭐ 当前星星</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="totalTasks">0</div>
+                <div class="stat-label">✅ 完成任务</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="totalRedeemed">0</div>
+                <div class="stat-label">🎁 已兑换</div>
+            </div>
+        </div>
+        
+        <div class="stars-card">
+            <div class="stars-number" id="starsBig">0</div>
+            <div class="stars-label">颗星星</div>
+            <div class="stars-visual" id="starsVisual"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div class="progress-text">再收集 <span id="starsNeeded">10</span> 颗可兑换小玩具</div>
+        </div>
+        
+        <div class="task-section">
+            <div class="section-title">
+                📝 今日任务
+            </div>
+            <div class="task-buttons">
+                <button class="task-btn btn-raz-new" onclick="completeTask('RAZ新1篇')">
+                    📚 RAZ新1篇
+                </button>
+                <button class="task-btn btn-raz-old" onclick="completeTask('RAZ旧1篇')">
+                    🔄 RAZ旧1篇
+                </button>
+                <button class="task-btn btn-writing" onclick="completeTask('看图写话1篇')">
+                    ✍️ 看图写话1篇
+                </button>
+                <button class="task-btn btn-custom" onclick="toggleCustom()">
+                    ✏️ 自定义任务
+                </button>
+            </div>
+        </div>
+        
+        <div class="redeem-card">
+            <div class="redeem-title">🎁 奖励兑换</div>
+            <button class="redeem-btn" id="redeemBtn" onclick="redeemReward()" disabled>
+                兑换小玩具 (-10⭐)
+            </button>
+        </div>
+        
+        <div class="history-section">
+            <div class="section-title">
+                📋 完成记录
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="empty-state">还没有完成任务，加油！💪</div>
+            </div>
+        </div>
+        
+        <div class="redeem-history">
+            <div class="section-title">
+                🎊 兑换记录
+            </div>
+            <div id="redeemHistory">
+                <div class="empty-state">还没有兑换记录 🌟</div>
+            </div>
+        </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <div class="modal-overlay" id="customTaskModal">
+        <div class="modal-content">
+            <div class="modal-title">✏️ 自定义任务</div>
+            <input type="text" class="modal-input" id="customTaskNameInput" placeholder="请输入任务名称...">
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="closeCustomTaskModal()">取消</button>
+                <button class="modal-btn modal-btn-confirm" onclick="confirmCustomTask()">确认完成</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-title" id="taskModalTitle">✨ 完成任务</div>
+            <div class="modal-subtitle">可选：添加备注内容</div>
+            <input type="text" class="modal-input" id="taskNoteInput" placeholder="输入备注内容（可选）...">
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="closeTaskModal()">取消</button>
+                <button class="modal-btn modal-btn-confirm" onclick="confirmTask()">确认完成</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="redeemModal">
+        <div class="modal-content">
+            <div class="modal-title">🎁 兑换小玩具</div>
+            <input type="text" class="modal-input" id="toyNameInput" placeholder="请输入玩具名称...">
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="closeRedeemModal()">取消</button>
+                <button class="modal-btn modal-btn-confirm" onclick="confirmRedeem()">确认兑换</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== Supabase 配置 ==========
+        const SUPABASE_URL = 'https://rjiaoivtkwtmhycnxczp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqaWFvaXZ0a3d0bWh5Y254Y3pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0NDE4OTUsImV4cCI6MjEwNzAxNzg5NX0.7m2tkw3WlQxcdjhd_gtLCRyxOfK7sBgVX5vwMjxXjnY';
+        
+        let supabaseClient = null;
+        
+        // 初始化 Supabase
+        function initSupabase() {
+            if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+                console.warn('Supabase 未配置，使用本地存储');
+                return false;
+            }
+            try {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('Supabase 初始化成功');
+                return true;
+            } catch (e) {
+                console.error('Supabase 初始化失败:', e);
+                return false;
+            }
+        }
+        
+        // 保存数据到 Supabase
+        async function saveToSupabase() {
+            if (!supabaseClient) return;
+            
+            try {
+                // 确保 userId 存在
+                let userId = localStorage.getItem('userId');
+                if (!userId) {
+                    userId = 'user_' + Date.now();
+                    localStorage.setItem('userId', userId);
+                }
+                
+                const data = {
+                    user_id: userId,
+                    "currentStars": currentStars,
+                    "totalTasks": totalTasks,
+                    "totalRedeemed": totalRedeemed,
+                    history: JSON.stringify(history),
+                    "redeemHistory": JSON.stringify(redeemHistory),
+                    updated_at: new Date().toISOString()
+                };
+                
+                console.log('准备保存数据:', data);
+                
+                const { error } = await supabaseClient
+                    .from('study_records')
+                    .upsert(data, { onConflict: 'user_id' });
+                
+                if (error) {
+                    console.error('保存到Supabase失败:', error);
+                    alert('保存失败: ' + error.message);
+                } else {
+                    console.log('数据已同步到云端');
+                }
+            } catch (e) {
+                console.error('保存错误:', e);
+                alert('保存出错: ' + e.message);
+            }
+        }
+        
+        // 从 Supabase 加载数据
+        async function loadFromSupabase() {
+            if (!supabaseClient) return false;
+            
+            try {
+                const userId = localStorage.getItem('userId');
+                if (!userId) return false;
+                
+                const { data, error } = await supabaseClient
+                    .from('study_records')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .single();
+                
+                if (error || !data) {
+                    console.log('云端无数据');
+                    return false;
+                }
+                
+                currentStars = data["currentStars"] || 0;
+                totalTasks = data["totalTasks"] || 0;
+                totalRedeemed = data["totalRedeemed"] || 0;
+                history = JSON.parse(data.history || '[]');
+                redeemHistory = JSON.parse(data["redeemHistory"] || '[]');
+                
+                console.log('已从云端加载数据');
+                return true;
+            } catch (e) {
+                console.error('加载错误:', e);
+                return false;
+            }
+        }
+        
+        // ========== 原有代码 ==========
+        let currentStars = 0;
+        let totalTasks = 0;
+        let totalRedeemed = 0;
+        let history = [];
+        let redeemHistory = [];
+        let pendingTask = null;
+        
+        // 手机号登录
+        function loginWithPhone() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            if (!phone || phone.length !== 11) {
+                alert('请输入正确的11位手机号');
+                return;
+            }
+            
+            const userId = 'phone_' + phone;
+            localStorage.setItem('userId', userId);
+            localStorage.setItem('userPhone', phone);
+            
+            // 显示主界面
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainScreen').style.display = 'block';
+            document.getElementById('userPhone').textContent = '(' + phone + ')';
+            
+            // 加载数据
+            loadData();
+        }
+        
+        // 检查是否已登录
+        function checkLogin() {
+            const userId = localStorage.getItem('userId');
+            const phone = localStorage.getItem('userPhone');
+            
+            if (userId && phone) {
+                // 已登录，显示主界面
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainScreen').style.display = 'block';
+                document.getElementById('userPhone').textContent = '(' + phone + ')';
+                return true;
+            } else {
+                // 未登录，显示登录界面
+                document.getElementById('loginScreen').style.display = 'block';
+                document.getElementById('mainScreen').style.display = 'none';
+                return false;
+            }
+        }
+        
+        function completeTask(taskName) {
+            pendingTask = taskName;
+            document.getElementById('taskModalTitle').textContent = `✨ 完成"${taskName}"`;
+            document.getElementById('taskNoteInput').value = '';
+            const modal = document.getElementById('taskModal');
+            modal.classList.add('show');
+            modal.style.setProperty('display', 'flex', 'important');
+            document.getElementById('taskNoteInput').focus();
+        }
+        
+        function closeTaskModal() {
+            pendingTask = null;
+            const modal = document.getElementById('taskModal');
+            modal.classList.remove('show');
+            modal.style.setProperty('display', 'none', 'important');
+        }
+        
+        function confirmTask() {
+            const modal = document.getElementById('taskModal');
+            try {
+                if (pendingTask) {
+                    const note = document.getElementById('taskNoteInput').value.trim();
+                    addTaskToHistory(pendingTask, note);
+                    pendingTask = null;
+                }
+            } catch (e) {
+                console.error('Error in confirmTask:', e);
+            }
+            modal.classList.remove('show');
+            modal.style.setProperty('display', 'none', 'important');
+        }
+        
+        function addTaskToHistory(taskName, note) {
+            currentStars++;
+            totalTasks++;
+            
+            const now = new Date();
+            const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            history.unshift({ 
+                task: taskName, 
+                note: note,
+                time: timeStr 
+            });
+            
+            updateDisplay();
+            saveData();
+            
+            const msg = note ? `完成"${taskName}"：${note}` : `完成"${taskName}"`;
+            showNotification(`✨ ${msg}，获得1颗⭐！`);
+        }
+        
+        function toggleCustom() {
+            document.getElementById('customTaskNameInput').value = '';
+            const modal = document.getElementById('customTaskModal');
+            modal.classList.add('show');
+            modal.style.setProperty('display', 'flex', 'important');
+            document.getElementById('customTaskNameInput').focus();
+        }
+        
+        function closeCustomTaskModal() {
+            const modal = document.getElementById('customTaskModal');
+            modal.classList.remove('show');
+            modal.style.setProperty('display', 'none', 'important');
+        }
+        
+        function confirmCustomTask() {
+            const taskName = document.getElementById('customTaskNameInput').value.trim();
+            if (!taskName) {
+                alert('请输入任务名称！');
+                return;
+            }
+            const modal = document.getElementById('customTaskModal');
+            modal.classList.remove('show');
+            modal.style.setProperty('display', 'none', 'important');
+            // 直接完成任务，不再弹出备注框
+            addTaskToHistory(taskName, '');
+        }
+        
+        function redeemReward() {
+            if (currentStars >= 10) {
+                document.getElementById('toyNameInput').value = '';
+                const modal = document.getElementById('redeemModal');
+                modal.classList.add('show');
+                modal.style.setProperty('display', 'flex', 'important');
+                document.getElementById('toyNameInput').focus();
+            }
+        }
+        
+        function closeRedeemModal() {
+            const modal = document.getElementById('redeemModal');
+            modal.classList.remove('show');
+            modal.style.setProperty('display', 'none', 'important');
+        }
+        
+        function confirmRedeem() {
+            const toyName = document.getElementById('toyNameInput').value.trim();
+            if (!toyName) {
+                alert('请输入玩具名称！');
+                return;
+            }
+            
+            currentStars -= 10;
+            totalRedeemed++;
+            
+            const now = new Date();
+            const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            redeemHistory.unshift({ toy: toyName, stars: 10, time: timeStr });
+            
+            closeRedeemModal();
+            updateDisplay();
+            saveData();
+            showNotification(`🎊 成功兑换"${toyName}"！`);
+        }
+        
+        document.getElementById('toyNameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') confirmRedeem();
+        });
+        
+        function updateDisplay() {
+            document.getElementById('currentStars').textContent = currentStars;
+            document.getElementById('starsBig').textContent = currentStars;
+            document.getElementById('totalTasks').textContent = totalTasks;
+            document.getElementById('totalRedeemed').textContent = totalRedeemed;
+            
+            const progress = (currentStars % 10) / 10 * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('starsNeeded').textContent = 10 - (currentStars % 10);
+            
+            const redeemBtn = document.getElementById('redeemBtn');
+            redeemBtn.disabled = currentStars < 10;
+            
+            updateStarsVisual();
+            updateHistory();
+            updateRedeemHistory();
+        }
+        
+        function updateStarsVisual() {
+            const container = document.getElementById('starsVisual');
+            const count = Math.min(currentStars, 20);
+            container.innerHTML = '⭐'.repeat(count);
+        }
+        
+        function updateHistory() {
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<div class="empty-state">还没有完成任务，加油！💪</div>';
+                return;
+            }
+            
+            list.innerHTML = history.slice(0, 20).map(item => `
+                <div class="history-item">
+                    <div>
+                        <div class="history-task">${item.task}</div>
+                        ${item.note ? `<div style="font-size: 13px; color: #667eea; margin-top: 4px;">📝 ${item.note}</div>` : ''}
+                        <div class="history-time">${item.time}</div>
+                    </div>
+                    <div style="font-size: 24px;">⭐</div>
+                </div>
+            `).join('');
+        }
+        
+        function updateRedeemHistory() {
+            const container = document.getElementById('redeemHistory');
+            if (redeemHistory.length === 0) {
+                container.innerHTML = '<div class="empty-state">还没有兑换记录 🌟</div>';
+                return;
+            }
+            
+            container.innerHTML = redeemHistory.map(item => `
+                <div class="redeem-record">
+                    <div>
+                        <div style="font-weight: bold; color: #856404;">${item.toy || '小玩具'}</div>
+                        <div class="history-time">${item.time}</div>
+                    </div>
+                    <div style="font-size: 18px;">🎁 -10⭐</div>
+                </div>
+            `).join('');
+        }
+        
+        function showNotification(message) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.classList.add('show');
+            setTimeout(() => notif.classList.remove('show'), 2500);
+        }
+        
+        function saveData() {
+            localStorage.setItem('studyTracker', JSON.stringify({
+                currentStars, totalTasks, totalRedeemed, history, redeemHistory
+            }));
+            // 同时保存到云端
+            saveToSupabase();
+        }
+        
+        async function loadData() {
+            // 先尝试从云端加载
+            const cloudLoaded = await loadFromSupabase();
+            
+            if (!cloudLoaded) {
+                // 云端无数据，从本地加载
+                const saved = localStorage.getItem('studyTracker');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    currentStars = data.currentStars || 0;
+                    totalTasks = data.totalTasks || 0;
+                    totalRedeemed = data.totalRedeemed || 0;
+                    history = data.history || [];
+                    redeemHistory = data.redeemHistory || [];
+                }
+            }
+            
+            updateDisplay();
+        }
+        
+        document.getElementById('taskNoteInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') confirmTask();
+        });
+        
+        document.getElementById('customTaskNameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') confirmCustomTask();
+        });
+        
+        // 初始化 Supabase 并加载数据
+        initSupabase();
+        
+        // 检查登录状态
+        if (!checkLogin()) {
+            // 未登录，不加载数据
+        } else {
+            // 已登录，加载数据
+            loadData();
+        }
+    </script>
+</body>
+</html>
