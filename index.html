@@ -442,7 +442,7 @@
         <div id="mainScreen">
             <div class="header">
                 <h1>🌟 学习打卡</h1>
-                <p>每天进步一点点 <span id="userPhone" style="font-size: 12px; color: #667eea;"></span></p>
+                <p>每天进步一点点</p>
             </div>
         
         <div class="stats-row">
@@ -672,7 +672,6 @@
             // 显示主界面
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainScreen').style.display = 'block';
-            document.getElementById('userPhone').textContent = '(' + phone + ')';
             
             // 加载数据
             loadData();
@@ -687,7 +686,6 @@
                 // 已登录，显示主界面
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('mainScreen').style.display = 'block';
-                document.getElementById('userPhone').textContent = '(' + phone + ')';
                 return true;
             } else {
                 // 未登录，显示登录界面
@@ -848,8 +846,8 @@
                 return;
             }
             
-            list.innerHTML = history.slice(0, 20).map(item => `
-                <div class="history-item">
+            list.innerHTML = history.slice(0, 20).map((item, index) => `
+                <div class="history-item" oncontextmenu="deleteHistoryItem(event, ${index})" ontouchstart="handleTouchStart(event, ${index})" ontouchend="handleTouchEnd(event)">
                     <div>
                         <div class="history-task">${item.task}</div>
                         ${item.note ? `<div style="font-size: 13px; color: #667eea; margin-top: 4px;">📝 ${item.note}</div>` : ''}
@@ -858,6 +856,41 @@
                     <div style="font-size: 24px;">⭐</div>
                 </div>
             `).join('');
+        }
+        
+        // 长按删除相关变量
+        let touchTimer = null;
+        let touchIndex = -1;
+        
+        function handleTouchStart(event, index) {
+            touchIndex = index;
+            touchTimer = setTimeout(() => {
+                deleteHistoryItem(null, index);
+            }, 800);
+        }
+        
+        function handleTouchEnd(event) {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+        }
+        
+        function deleteHistoryItem(event, index) {
+            if (event) event.preventDefault();
+            
+            const item = history[index];
+            const confirmMsg = `确定要删除这条记录吗？\n\n任务：${item.task}\n时间：${item.time}`;
+            
+            if (confirm(confirmMsg)) {
+                history.splice(index, 1);
+                currentStars = Math.max(0, currentStars - 1);
+                totalTasks = Math.max(0, totalTasks - 1);
+                
+                updateDisplay();
+                saveData();
+                showNotification('已删除记录');
+            }
         }
         
         function updateRedeemHistory() {
